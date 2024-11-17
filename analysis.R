@@ -61,11 +61,42 @@ write.csv(data, "updated_dataset.csv", row.names = FALSE)
 
 # algo 1: KNN
 
-a<-read.csv("C://lpu//5th sem//INT234//Project//updated_dataset.csv")
+a<-read.csv("C://lpu//5th sem//INT234//Project//updated_dataset.csv",stringsAsFactors = FALSE)
 colnames(a)
+ncol(a)
 str(a)
 
 # to-be factor columns are Card, Year, Month, Day, Use.Chip, Merchant.City, Merchant.State, Zip, MCC, Errors, HourOfDay, Hour, Is.Fraud, IsWeekend, TotalAmountPerUser, TotalAmountPerCard
-factor_columns<-c("Card","Year","Month","Day","Use.Chip","Merchant.City","Merchant.State","Zip","MCC","Errors.","HourOfDay","Is.Fraud.","IsWeekend","TotalAmountPerUser","TotalAmountPerCard")
-a[factor_columns]<-lapply(data[factor_columns],factor)
+# factor_columns<-c("Card","Year","Month","Day","Use.Chip","Merchant.City","Merchant.State","Zip","MCC","Errors.","HourOfDay","IsWeekend","TotalAmountPerUser","TotalAmountPerCard")
+# a[factor_columns]<-lapply(data[factor_columns],factor)
+a$Is.Fraud.<-factor(a$Is.Fraud.,levels = c("0","1"),labels=c("No","Yes"))
 str(a)
+# checking the distribution of Fraud in the dataset
+table(a$Is.Fraud.)
+round(prop.table(table(a$Is.Fraud.))*100,digits = 1)
+summary(a)
+normalize <- function(x) {
+  if (min(x, na.rm = TRUE) == max(x, na.rm = TRUE)) {
+    return(rep(0, length(x)))  # Handle constant columns
+  } else {
+    return((x - min(x, na.rm = TRUE)) / (max(x, na.rm = TRUE) - min(x, na.rm = TRUE)))
+  }
+}
+# considering only numeric columns for normalization
+numeric_col <- sapply(a, is.numeric)
+# Applying normalization only to numeric columns
+norm_num <- as.data.frame(lapply(a[, numeric_col], normalize))
+# Combinining normalized numeric columns with the non-numeric columns
+a_norm <- cbind(norm_num, a[, !numeric_col])
+set.seed(42)
+indexes<-sample(1:nrow(a),0.7*nrow(a))
+a_train<-a_norm[indexes,]
+a_test<-a_norm[-indexes,]
+sum(is.na(a_train))
+sum(is.na(a_test))
+a_train_labels<-a[indexes,]$Is.Fraud.
+a_test_labels<-a[-indexes,]$Is.Fraud.
+sum(is.na(a_train_labels))
+sum(is.na(a_test_labels))
+library(class)
+a_test_prepd<-knn(train=a_train,test=a_test,cl=a_train_labels,k=69)
