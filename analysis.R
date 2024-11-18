@@ -69,12 +69,21 @@ str(a)
 # to-be factor columns are Card, Year, Month, Day, Use.Chip, Merchant.City, Merchant.State, Zip, MCC, Errors, HourOfDay, Hour, Is.Fraud, IsWeekend, TotalAmountPerUser, TotalAmountPerCard
 # factor_columns<-c("Card","Year","Month","Day","Use.Chip","Merchant.City","Merchant.State","Zip","MCC","Errors.","HourOfDay","IsWeekend","TotalAmountPerUser","TotalAmountPerCard")
 # a[factor_columns]<-lapply(data[factor_columns],factor)
+a$Year <- as.numeric(format(as.Date(a$Datetime), "%Y"))
+a$Month <- as.numeric(format(as.Date(a$Datetime), "%m"))
+a <- a[, !(colnames(a) %in% c("Datetime"))]  # Dropping Datetime as we already have Date and Time in the dataset
+# Converting all character columns to factors
+char_cols <- sapply(a, is.character)
+a[char_cols] <- lapply(a[char_cols], as.factor)
+# Ensure target column is a factor
 a$Is.Fraud.<-factor(a$Is.Fraud.,levels = c("0","1"),labels=c("No","Yes"))
 str(a)
 # checking the distribution of Fraud in the dataset
 table(a$Is.Fraud.)
 round(prop.table(table(a$Is.Fraud.))*100,digits = 1)
 summary(a)
+library(ROSE)
+a<-ROSE(Is.Fraud. ~ .,data=a,seed = 42)$data
 normalize <- function(x) {
   if (min(x, na.rm = TRUE) == max(x, na.rm = TRUE)) {
     return(rep(0, length(x)))  # Handle constant columns
@@ -85,18 +94,29 @@ normalize <- function(x) {
 # considering only numeric columns for normalization
 numeric_col <- sapply(a, is.numeric)
 # Applying normalization only to numeric columns
-norm_num <- as.data.frame(lapply(a[, numeric_col], normalize))
+a_norm <- as.data.frame(lapply(a[, numeric_col], normalize))
 # Combinining normalized numeric columns with the non-numeric columns
-a_norm <- cbind(norm_num, a[, !numeric_col])
-set.seed(42)
 indexes<-sample(1:nrow(a),0.7*nrow(a))
 a_train<-a_norm[indexes,]
 a_test<-a_norm[-indexes,]
-sum(is.na(a_train))
-sum(is.na(a_test))
+a_train<-as.data.frame(a_train)
+a_test<-as.data.frame(a_test)
 a_train_labels<-a[indexes,]$Is.Fraud.
 a_test_labels<-a[-indexes,]$Is.Fraud.
-sum(is.na(a_train_labels))
-sum(is.na(a_test_labels))
+# sum(is.na(a_train_labels))
+# sum(is.na(a_test_labels))
 library(class)
-a_test_prepd<-knn(train=a_train,test=a_test,cl=a_train_labels,k=69)
+a_test_prepd<-knn(train=a_train,test=a_test,cl=a_train_labels,k=100)
+library(gmodels)
+CrossTable(x=a_test_labels,y=a_test_prepd,prop.chisq = FALSE)
+aa<-table(a_test_labels,a_test_prepd)
+library(caret)
+cnf1<-confusionMatrix(aa)
+cnf1
+knn_aacuracy<-(sum(diag(cnf1$table))/sum(cnf1$table))*100
+print(paste(knn_aacuracy,"%"))
+
+
+
+# algo 2: Naive Bayes
+
