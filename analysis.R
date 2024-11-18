@@ -168,3 +168,30 @@ library(caret)
 cnf2<-confusionMatrix(bb)
 naiveBayes_aacuracy<-(sum(diag(cnf2$table))/sum(cnf2$table))*100
 print(paste(naiveBayes_aacuracy,"%"))
+
+
+# algo 3: Decision Tree
+library(rpart)
+library(rpart.plot)
+library(caret)
+c<-read.csv("C://lpu//5th sem//INT234//Project//updated_dataset.csv",stringsAsFactors = FALSE)
+colnames(c)
+c$Is.Fraud. <- factor(c$Is.Fraud., levels = c(0, 1), labels = c("No", "Yes"))
+c[sapply(c, is.character)] <- lapply(c[sapply(c, is.character)], factor)
+c_balanced <- upSample(x = c[, -which(names(c) == "Is.Fraud.")], 
+                       y = c$Is.Fraud.)
+c_balanced$Is.Fraud. <- c_balanced$Class
+c_balanced$Class <- NULL
+set.seed(42)
+indexes<-sample(1:nrow(c_balanced),0.7*nrow(c_balanced))
+c_train<-c_balanced[indexes,]
+c_test<-c_balanced[-indexes,]
+target<-Is.Fraud. ~ Card+Year+Month+Day+Amount+Use.Chip+Merchant.City+Merchant.State+Zip+MCC+Errors.+Datetime+HourOfDay+TotalMinutes+TransactionFrequency+HasErrors+TotalAmountPerUser+IsWeekend+TotalAmountPerCard+Date+Time
+tree<-rpart(target,data=c_train,method="class")
+rpart.plot(tree)
+c_pred<-predict(tree,c_test,type="class")
+cc<-table(c_test$Is.Fraud.,c_pred)
+cc
+cnf3<-confusionMatrix(cc)
+decision_tree_accuracy<-sum(diag(cnf3$table))/sum(cnf3$table)
+print(paste(round(decision_tree_accuracy * 100, 2), "%"))
