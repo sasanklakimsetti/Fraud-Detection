@@ -67,8 +67,8 @@ ncol(a)
 str(a)
 
 # to-be factor columns are Card, Year, Month, Day, Use.Chip, Merchant.City, Merchant.State, Zip, MCC, Errors, HourOfDay, Hour, Is.Fraud, IsWeekend, TotalAmountPerUser, TotalAmountPerCard
-# factor_columns<-c("Card","Year","Month","Day","Use.Chip","Merchant.City","Merchant.State","Zip","MCC","Errors.","HourOfDay","IsWeekend","TotalAmountPerUser","TotalAmountPerCard")
-# a[factor_columns]<-lapply(data[factor_columns],factor)
+factor_columns<-c("Card","Day","Use.Chip","Merchant.City","Merchant.State","Zip","MCC","Errors.","HourOfDay","IsWeekend","HasErrors")
+a[factor_columns]<-lapply(a[factor_columns],factor)
 a$Year <- as.numeric(format(as.Date(a$Datetime), "%Y"))
 a$Month <- as.numeric(format(as.Date(a$Datetime), "%m"))
 a <- a[, !(colnames(a) %in% c("Datetime"))]  # Dropping Datetime as we already have Date and Time in the dataset
@@ -95,7 +95,6 @@ normalize <- function(x) {
 numeric_col <- sapply(a, is.numeric)
 # Applying normalization only to numeric columns
 a_norm <- as.data.frame(lapply(a[, numeric_col], normalize))
-# Combinining normalized numeric columns with the non-numeric columns
 indexes<-sample(1:nrow(a),0.7*nrow(a))
 a_train<-a_norm[indexes,]
 a_test<-a_norm[-indexes,]
@@ -126,6 +125,15 @@ b<-read.csv("C://lpu//5th sem//INT234//Project//updated_dataset.csv",stringsAsFa
 # head(b)
 # Check unique values in the Is.Fraud column before conversion
 unique(b$Is.Fraud.)
+# to-be factor columns are Card, Year, Month, Day, Use.Chip, Merchant.City, Merchant.State, Zip, MCC, Errors, HourOfDay, Hour, Is.Fraud, IsWeekend, TotalAmountPerUser, TotalAmountPerCard
+factor_columns<-c("Card","Day","Use.Chip","Merchant.City","Merchant.State","Zip","MCC","Errors.","HourOfDay","IsWeekend","HasErrors")
+b[factor_columns]<-lapply(b[factor_columns],factor)
+b$Year <- as.numeric(format(as.Date(b$Datetime), "%Y"))
+b$Month <- as.numeric(format(as.Date(b$Datetime), "%m"))
+b <- b[, !(colnames(b) %in% c("Datetime"))]  # Dropping Datetime as we already have Date and Time in the dataset
+# Converting all character columns to factors
+char_cols <- sapply(b, is.character)
+b[char_cols] <- lapply(b[char_cols], as.factor)
 b$Is.Fraud. <- factor(b$Is.Fraud., levels = c(0, 1), labels = c("No", "Yes"))
 # sum(is.na(b$Is.Fraud.))
 # converting all character columns into factors
@@ -176,6 +184,15 @@ library(rpart.plot)
 library(caret)
 c<-read.csv("C://lpu//5th sem//INT234//Project//updated_dataset.csv",stringsAsFactors = FALSE)
 colnames(c)
+# to-be factor columns are Card, Year, Month, Day, Use.Chip, Merchant.City, Merchant.State, Zip, MCC, Errors, HourOfDay, Hour, Is.Fraud, IsWeekend, TotalAmountPerUser, TotalAmountPerCard
+factor_columns<-c("Card","Day","Use.Chip","Merchant.City","Merchant.State","Zip","MCC","Errors.","HourOfDay","IsWeekend","HasErrors")
+c[factor_columns]<-lapply(c[factor_columns],factor)
+c$Year <- as.numeric(format(as.Date(c$Datetime), "%Y"))
+c$Month <- as.numeric(format(as.Date(c$Datetime), "%m"))
+c <- c[, !(colnames(c) %in% c("Datetime"))]  # Dropping Datetime as we already have Date and Time in the dataset
+# Converting all character columns to factors
+char_cols <- sapply(c, is.character)
+c[char_cols] <- lapply(c[char_cols], as.factor)
 c$Is.Fraud. <- factor(c$Is.Fraud., levels = c(0, 1), labels = c("No", "Yes"))
 c[sapply(c, is.character)] <- lapply(c[sapply(c, is.character)], factor)
 c_balanced <- upSample(x = c[, -which(names(c) == "Is.Fraud.")], 
@@ -186,12 +203,75 @@ set.seed(42)
 indexes<-sample(1:nrow(c_balanced),0.7*nrow(c_balanced))
 c_train<-c_balanced[indexes,]
 c_test<-c_balanced[-indexes,]
-target<-Is.Fraud. ~ Card+Year+Month+Day+Amount+Use.Chip+Merchant.City+Merchant.State+Zip+MCC+Errors.+Datetime+HourOfDay+TotalMinutes+TransactionFrequency+HasErrors+TotalAmountPerUser+IsWeekend+TotalAmountPerCard+Date+Time
+target<-Is.Fraud. ~ Month+Day+Amount+Use.Chip+MCC+Errors.+HourOfDay+TotalMinutes+TransactionFrequency
+# ,control = rpart.control(maxdepth = 5, cp = 0.02, minsplit = 20)
 tree<-rpart(target,data=c_train,method="class")
+# png("decision_tree.png", width = 5000, height = 4000, res = 300)
 rpart.plot(tree)
+# dev.off()
 c_pred<-predict(tree,c_test,type="class")
 cc<-table(c_test$Is.Fraud.,c_pred)
 cc
 cnf3<-confusionMatrix(cc)
 decision_tree_accuracy<-sum(diag(cnf3$table))/sum(cnf3$table)
 print(paste(round(decision_tree_accuracy * 100, 2), "%"))
+
+
+
+# algo 4: Artificial Neural Networks
+d<-read.csv("C://lpu//5th sem//INT234//Project//updated_dataset.csv",stringsAsFactors = FALSE)
+# d_train$Use.Chip <- as.factor(d_train$Use.Chip)
+# d_train$Errors. <- as.factor(d_train$Errors.)
+# d_train$HasErrors <- as.factor(d_train$HasErrors)
+d$Year <- as.numeric(format(as.Date(d$Datetime), "%Y"))
+d$Month <- as.numeric(format(as.Date(d$Datetime), "%m"))
+d <- d[, !(colnames(d) %in% c("Datetime"))]  # Dropping Datetime as we already have Date and Time in the dataset
+# d$Is.Fraud. <- factor(d$Is.Fraud., levels = c(0, 1), labels = c("No", "Yes"))
+# sum(is.na(b$Is.Fraud.))
+# converting all character columns into factors
+# d[sapply(d, is.character)] <- lapply(d[sapply(d, is.character)], factor)
+normalize <- function(x) {
+  if (min(x, na.rm = TRUE) == max(x, na.rm = TRUE)) {
+    return(rep(0, length(x)))  # Handle constant columns
+  } else {
+    return((x - min(x, na.rm = TRUE)) / (max(x, na.rm = TRUE) - min(x, na.rm = TRUE)))
+  }
+}
+numeric_col <- sapply(d, is.numeric)
+# Applying normalization only to numeric columns
+norm_num<-as.data.frame(lapply(d[numeric_col],normalize))
+d_norm<-cbind(norm_num, d[, !numeric_col])
+d_norm$Is.Fraud. <- factor(d_norm$Is.Fraud., levels = c(0, 1), labels = c("No", "Yes"))
+d_balanced <- upSample(x = d_norm[, -which(names(d_norm) == "Is.Fraud.")], y = d_norm$Is.Fraud.)
+d_balanced$Is.Fraud. <- d_balanced$Class 
+d_balanced$Class <- NULL # Split dataset into training and testing 
+set.seed(42)
+indexes <- sample(1:nrow(d_balanced), 0.7 * nrow(d_balanced)) 
+d_train <- d_balanced[indexes,]
+d_test <- d_balanced[-indexes,]
+d_train$Amount <- scale(d_train$Amount)
+d_train$TotalMinutes <- scale(d_train$TotalMinutes)
+d_train$TransactionFrequency <- scale(d_train$TransactionFrequency)
+table(d_train$Is.Fraud.)
+table(d_test$Is.Fraud.)
+# sum(is.na(d_test))
+library("neuralnet")
+colnames(d_norm)
+d_model<-neuralnet(Is.Fraud. ~ Amount+TotalMinutes+TransactionFrequency, data = d_train, hidden = c(5, 3), linear.output = FALSE)
+plot(d_model)
+d_results<-compute(d_model,d_test)
+d_pred_fraud<-d_results$net.result
+d_pred_class <- ifelse(d_pred_fraud > 0.5, 1, 0)
+# Find the union of the levels of predicted and actual factors
+levels <- union(levels(factor(d_pred_class)), levels(factor(d_test$Is.Fraud.)))
+
+# Ensure both factors have the same levels
+d_pred_class <- factor(d_pred_class, levels = levels)
+d_test$Is.Fraud. <- factor(d_test$Is.Fraud., levels = levels)
+dd<-table(d_pred_class,d_test$Is.Fraud.)
+dd
+# Create confusion matrix
+cnf4 <- confusionMatrix(d_pred_class, d_test$Is.Fraud.)
+
+# Print confusion matrix
+print(cnf4)
