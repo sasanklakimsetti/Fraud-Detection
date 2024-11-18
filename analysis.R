@@ -120,3 +120,51 @@ print(paste(knn_aacuracy,"%"))
 
 # algo 2: Naive Bayes
 
+b<-read.csv("C://lpu//5th sem//INT234//Project//updated_dataset.csv",stringsAsFactors = FALSE)
+# sum(is.na(b))
+# str(b)
+# head(b)
+# Check unique values in the Is.Fraud column before conversion
+unique(b$Is.Fraud.)
+b$Is.Fraud. <- factor(b$Is.Fraud., levels = c(0, 1), labels = c("No", "Yes"))
+# sum(is.na(b$Is.Fraud.))
+# converting all character columns into factors
+b[sapply(b, is.character)] <- lapply(b[sapply(b, is.character)], factor)
+# Remove DateTime, Date, and Time columns as naive bayes can't compute them due to the format
+b <- b[, !names(b) %in% c("DateTime", "Date", "Time")]
+# sum(is.na(b))
+b<-ROSE(Is.Fraud. ~ .,data=b,seed = 42)$data
+normalize <- function(x) {
+  if (min(x, na.rm = TRUE) == max(x, na.rm = TRUE)) {
+    return(rep(0, length(x)))  # Or return rep(1, length(x)) if you prefer to normalize constant columns to 1
+  } else {
+    return((x - min(x, na.rm = TRUE)) / (max(x, na.rm = TRUE) - min(x, na.rm = TRUE)))
+  }
+}
+# considering only numeric columns for normalization
+numeric_col <- sapply(b, is.numeric)
+# Applying normalization only to numeric columns
+norm_num <- as.data.frame(lapply(b[, numeric_col], normalize))
+b_norm <- cbind(norm_num, b[, !numeric_col])
+# sum(is.na(b_norm))
+set.seed(42)
+indexes<-sample(1:nrow(b),0.7*nrow(b))
+b_train<-b_norm[indexes,]
+b_test<-b_norm[-indexes,]
+b_train_labels<-b[indexes,]$Is.Fraud.
+b_test_labels<-b[-indexes,]$Is.Fraud.
+# sum(is.na(b_train))
+# sum(is.na(b_test))
+library(e1071)
+b_classifier<-naiveBayes(b_train,b_train_labels)
+# b_classifier
+b_pred<-predict(b_classifier,b_test)
+# length(b_pred)
+# length(b_test_labels)
+bb<-table(b_pred,b_test_labels)
+# bb
+CrossTable(b_pred,b_test_labels,prop.chisq = FALSE,prop.t = FALSE,dnn = c('predicted','actual'))  # making a table which tells about how many values have been predicted correctly classified by predicted and actual
+library(caret)
+cnf2<-confusionMatrix(bb)
+naiveBayes_aacuracy<-(sum(diag(cnf2$table))/sum(cnf2$table))*100
+print(paste(naiveBayes_aacuracy,"%"))
