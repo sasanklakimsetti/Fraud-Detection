@@ -147,7 +147,7 @@ numeric_col <- sapply(b, is.numeric)
 norm_num <- as.data.frame(lapply(b[, numeric_col], normalize))
 b_norm <- cbind(norm_num, b[, !numeric_col])
 # sum(is.na(b_norm))
-set.seed(42)
+#set.seed(42)
 indexes<-sample(1:nrow(b),0.7*nrow(b))
 b_train<-b_norm[indexes,]
 b_test<-b_norm[-indexes,]
