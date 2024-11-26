@@ -171,6 +171,7 @@ bb<-table(b_pred,b_test_labels)
 CrossTable(b_pred,b_test_labels,prop.chisq = FALSE,prop.t = FALSE,dnn = c('predicted','actual'))  
 library(caret)
 cnf2<-confusionMatrix(bb)
+cnf2
 naiveBayes_aacuracy<-(sum(diag(cnf2$table))/sum(cnf2$table))*100
 print(paste("Accuracy: ",round(naiveBayes_aacuracy,2),"%"))
 
@@ -213,6 +214,7 @@ c_pred<-predict(tree,c_test,type="class")
 cc<-table(c_test$Is.Fraud.,c_pred)
 cc
 cnf3<-confusionMatrix(cc)
+cnf3
 decision_tree_accuracy<-(sum(diag(cnf3$table))/sum(cnf3$table))*100
 print(paste("Accuracy: ",round(decision_tree_accuracy, 2), "%"))
 
