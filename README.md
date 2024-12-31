@@ -3,7 +3,8 @@
 This project analyses credit card transactions dataset to predict whether the transaction is a fraud transaction or not. Using various predictive analysis models, we aim to identify the patterns in transactions that correlate with fraudulent status. This analysis includes classification methods, which enable us to understand the underlying structure in the data and access model effectiveness.
 The models used are:
 1.	K-Nearest Neighbors (K-NN): It is a supervised machine learning method employed to tackle classification and regression problems. The K-NN algorithm works by finding the K nearest neighbors to a given data point based on a distance metric, such as Euclidean distance. The class or value of the data point is then determined by the majority vote or average of the K neighbors. This approach allows the algorithm to adapt to different patterns and make predictions based on the local structure of the data.
-   ![Screenshot 2024-11-26 091345](https://github.com/user-attachments/assets/b0b5b2dd-27e6-4013-aa66-a2e9a89f0452)
+
+  	![Screenshot 2024-11-26 091345](https://github.com/user-attachments/assets/b0b5b2dd-27e6-4013-aa66-a2e9a89f0452)
 
 2.	Naïve Bayes Classifiers: It is used for classification problems. It is highly used in text classification. In text classification tasks, data contains high dimension (as each word represent one feature in the data). It is used in spam filtering, sentiment detection, rating classification etc. The advantage of using naïve Bayes is its speed. It is fast and making prediction is easy with high dimension of data.
 
